@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./console.sol";
+// import "./console.sol";
 
 contract NFTCollection is Ownable {
     using Counters for Counters.Counter;
