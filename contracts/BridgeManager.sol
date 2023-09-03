@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "hardhat/console.sol";
 
 contract BridgeManager is Pausable, Ownable, IERC721Receiver {
     using ECDSA for BridgeManager;
@@ -182,7 +183,7 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
         bool takeFee,
         bytes memory signature
     ) internal view {
-        bytes memory message = abi.encodePacked(
+        bytes memory message = abi.encode(
             msg.sender,
             address(this),
             address(collection),
@@ -191,7 +192,11 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
             nonces[address(collection)][tokenId]
         );
         bytes32 msgHash = ECDSA.toEthSignedMessageHash(keccak256(message));
+        console.log("msgHash:");
+        console.logBytes32(msgHash);
         (address signer, ) = ECDSA.tryRecover(msgHash, signature);
+        console.log("signer:", signer);
+        console.log("owner():", owner());
         require(signer == owner(), "Not signed by owner");
     }
 
@@ -201,7 +206,7 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
     function transferFees(bool takeFee) internal {
         uint eth_fee = 0;
         if (takeFee) {
-            eth_fee = (fee * 1e8) / getLatestPrice();
+            eth_fee = (fee * 1e8) / 1850 /* getLatestPrice() */;
         }
         require(msg.value >= eth_fee, "Must pay fee");
         if (msg.value > eth_fee)
