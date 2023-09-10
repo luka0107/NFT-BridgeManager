@@ -94,7 +94,7 @@ describe("BridgeManager", function () {
       console.log(">>> ~ flowCrashCollectionAddress:", flowCrashCollectionAddress);
 
       // mint tokenId to otherAccount
-      await ethCrash.safeMintToken(account1, tokenId);
+      await ethCrash.safeMintToken(account1.address, tokenId);
       await ethCrash.connect(account1).approve(ethBridgeManagerAddress, tokenId);
 
       // await ethBridgeManager.addChainsToCollection(ethCrashCollectionAddress, ["FLOW"], [flowCrashAddress]);
