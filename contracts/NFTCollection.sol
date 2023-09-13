@@ -13,7 +13,7 @@ contract NFTCollection is Ownable {
     string public baseURI;
     uint256 public collection_ID;
     string public original_chain;
-    address public eth_chain_address;
+    address public original_collection_address;
     mapping(string => string) public chain_contract_addresses;
 
     Counters.Counter private _token_Id_counter;
@@ -25,13 +25,13 @@ contract NFTCollection is Ownable {
         string memory symbol_,
         string memory baseURI_,
         string memory original_chain_,
-        address eth_chain_address_
+        address original_collection_address_
     ) {
         name = name_;
         symbol = symbol_;
         baseURI = baseURI_;
         original_chain = original_chain_;
-        eth_chain_address = eth_chain_address_;
+        original_collection_address = original_collection_address_;
         collection_ID = _token_Id_counter.current();
         _token_Id_counter.increment();
     }
@@ -43,10 +43,6 @@ contract NFTCollection is Ownable {
         string memory chain,
         string memory contract_address
     ) external onlyOwner {
-        require(
-            !compare_strings(chain, "ETH"),
-            "Cannot add ETH contract address here"
-        );
         chain_contract_addresses[chain] = contract_address;
         emit Add_Chain(address(this), chain, contract_address);
     }
@@ -62,24 +58,5 @@ contract NFTCollection is Ownable {
             "No contract associated with the chain"
         );
         return chain_contract_addresses[chain];
-    }
-
-    /**
-     * Get Contract address of chain in collection
-     */
-    function is_original_chain_ETH() external view returns (bool) {
-        return compare_strings(original_chain, "ETH");
-    }
-
-    //Helper Functions
-    function compare_strings(
-        string memory a,
-        string memory b
-    ) internal pure returns (bool) {
-        if (bytes(a).length != bytes(b).length) {
-            return false;
-        }
-        return (keccak256(abi.encodePacked((a))) ==
-            keccak256(abi.encodePacked((b))));
     }
 }

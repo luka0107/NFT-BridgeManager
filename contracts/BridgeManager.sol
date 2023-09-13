@@ -28,7 +28,7 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
         string symbol,
         string baseURI,
         string originalChain,
-        address ethChainAddress
+        address originalCollectionAddress
     );
     event SetFee(uint fee);
     event PaymentAccountSet(address paymentAccount);
@@ -63,14 +63,14 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
         string memory symbol,
         string memory baseURI,
         string memory originalChain,
-        address ethChainAddress
+        address originalCollectionAddress
     ) external onlyOwner whenNotPaused {
         NFTCollection collection = new NFTCollection(
             name,
             symbol,
             baseURI,
             originalChain,
-            ethChainAddress
+            originalCollectionAddress
         );
         collections.push(collection);
         is_minted[address(collection)] = true;
@@ -80,7 +80,7 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
             symbol,
             baseURI,
             originalChain,
-            ethChainAddress
+            originalCollectionAddress
         );
     }
 
@@ -121,20 +121,20 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
         NFTCollection collection,
         uint256 tokenId,
         string memory destChain,
-        string memory destAddress,
+        string memory destCollectionAddress,
         bool takeFee
     ) external payable whenNotPaused {
         require(is_minted[address(collection)], "Invalid collection address");
         transferFees(takeFee);
-        IERC721PlusInterface ethContract = IERC721PlusInterface(
-            collection.eth_chain_address()
+        IERC721PlusInterface collectionContract = IERC721PlusInterface(
+            collection.original_collection_address()
         );
-        ethContract.transferFrom(msg.sender, address(this), tokenId);
+        collectionContract.transferFrom(msg.sender, address(this), tokenId);
         emit PushedToBridge(
             address(collection),
             tokenId,
             destChain,
-            destAddress,
+            destCollectionAddress,
             nonces[address(collection)][tokenId]++
         );
     }
@@ -156,14 +156,19 @@ contract BridgeManager is Pausable, Ownable, IERC721Receiver {
 
         transferFees(takeFee);
 
-        IERC721PlusInterface ethContract = IERC721PlusInterface(
-            collection.eth_chain_address()
+        IERC721PlusInterface collectionContract = IERC721PlusInterface(
+            collection.original_collection_address()
         );
         // Mint token only possible in chains owned by the bridge.
-        if (!collection.is_original_chain_ETH() && !ethContract.exists(tokenId))
-            ethContract.safeMintToken(msg.sender, tokenId);
+        if (/* !collection.is_original_chain_ETH() &&  */!collectionContract.exists(tokenId)) {
+            console.log("tokenId doesn't exist");
+            collectionContract.safeMintToken(msg.sender, tokenId);
+        }
         // For chains not owned by the bridge, Transfer will revert if token does not exist
-        else ethContract.transferFrom(address(this), msg.sender, tokenId);
+        else {
+            console.log("tokenId exists");
+            collectionContract.transferFrom(address(this), msg.sender, tokenId);
+        }
 
         emit PulledFromBridge(
             address(collection),
